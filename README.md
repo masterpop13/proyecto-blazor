@@ -88,3 +88,9 @@ Comandos utilizados:
 ```bash
 dotnet ef migrations add InitialCreate
 dotnet ef database update
+
+### Instalación y ejecución local
+
+1. Clonar el repositorio:
+   ```bash
+   git clone [https://github.com/masterpop13/proyecto-blazor.git](https://github.com/masterpop13/proyecto-blazor.git)

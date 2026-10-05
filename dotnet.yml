@@ -1,31 +1,25 @@
-name: Build Blazor Project
+name: Build Blazor App
 
 on:
   push:
-    branches:
-      - main
-      - master
-
+    branches: [ "main" ]
   pull_request:
-    branches:
-      - main
-      - master
+    branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Descargar código
-        uses: actions/checkout@v4
-
-      - name: Instalar .NET 8
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
-
-      - name: Restaurar dependencias
-        run: dotnet restore
-
-      - name: Compilar proyecto
-        run: dotnet build --no-restore --configuration Release
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build
+      run: dotnet build --no-restore -c Release
