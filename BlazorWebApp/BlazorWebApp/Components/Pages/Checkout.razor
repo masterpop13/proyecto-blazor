@@ -1,0 +1,115 @@
+﻿@page "/checkout"
+@using Microsoft.AspNetCore.Components.Web
+@using BlazorWebApp.Models
+@using BlazorWebApp.Services
+@rendermode InteractiveServer
+
+@inject CarritoStateService CarritoState
+@inject PedidoService PedidoService
+@inject SesionUsuarioService SesionUsuario
+@inject NavigationManager Navigation
+
+<h3>Confirmar Compra</h3>
+
+@if (!CarritoState.Productos.Any())
+{
+    <p>El carrito está vacío.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Precio Unitario</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var grupo in ItemsAgrupados)
+            {
+                <tr>
+                    <td>@grupo.Nombre</td>
+                    <td>@grupo.Cantidad</td>
+                    <td>$@grupo.PrecioUnitario</td>
+                    <td>$@(grupo.PrecioUnitario* grupo.Cantidad)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <h4>Total: $@CarritoState.Total</h4>
+
+    <button class="btn btn-success mt-3" @onclick="ProcesarPedido" disabled="@isProcessing">
+        @(isProcessing ? "Procesando..." : "Confirmar y Realizar Pedido")
+    </button>
+
+    @if (!string.IsNullOrEmpty(mensajeError))
+    {
+        <div class="alert alert-danger mt-3">@mensajeError</div>
+    }
+}
+
+@code {
+    private bool isProcessing = false;
+    private string? mensajeError;
+
+    // Agrupa los productos duplicados para mostrar cantidad y calcular subtotales
+    private IEnumerable<ItemResumen> ItemsAgrupados => CarritoState.Productos
+        .GroupBy(p => p.ProductoId)
+        .Select(g => new ItemResumen
+        {
+            ProductoId = g.Key,
+            Nombre = g.First().Nombre,
+            PrecioUnitario = g.First().Precio,
+            Cantidad = g.Count()
+        });
+
+    private async Task ProcesarPedido()
+    {
+        var usuario = SesionUsuario.UsuarioActual;
+        if (usuario == null)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        isProcessing = true;
+        mensajeError = null;
+
+        try
+        {
+            var detalles = ItemsAgrupados.Select(item => new DetallePedido
+            {
+                ProductoId = item.ProductoId,
+                Cantidad = item.Cantidad,
+                PrecioUnitario = item.PrecioUnitario
+            }).ToList();
+
+            // Pasa el UsuarioId según tu modelo Usuario
+            int pedidoId = await PedidoService.CrearPedidoAsync(usuario.UsuarioId, detalles);
+
+            // Vacía la lista con el método de tu CarritoStateService
+            CarritoState.VaciarCarrito();
+
+            Navigation.NavigateTo($"/pedido-exitoso/{pedidoId}");
+        }
+        catch (Exception ex)
+        {
+            mensajeError = ex.Message;
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    private class ItemResumen
+    {
+        public int ProductoId { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+        public decimal PrecioUnitario { get; set; }
+        public int Cantidad { get; set; }
+    }
+}

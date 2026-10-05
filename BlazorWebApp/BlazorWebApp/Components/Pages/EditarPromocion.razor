@@ -1,0 +1,207 @@
+﻿@page "/admin/promociones/editar/{PromocionId:int}"
+@rendermode InteractiveServer
+
+@using BlazorWebApp.Models
+@using BlazorWebApp.Services
+@using Microsoft.AspNetCore.Components.Forms
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment Env
+@inject PromocionService PromocionService
+@inject SesionUsuarioService SesionUsuario
+@inject NavigationManager Navigation
+
+<PageTitle>Editar Promoción</PageTitle>
+
+<div class="container py-5">
+
+    <div class="text-center mb-5">
+        <h1 class="fw-bold text-uppercase">
+            Editar Promoción
+        </h1>
+
+        <p class="text-muted">
+            Modificá la promoción seleccionada.
+        </p>
+    </div>
+
+    @if (promocion == null)
+    {
+        <div class="alert alert-warning">
+            Cargando promoción...
+        </div>
+    }
+    else
+    {
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+
+                <div class="card shadow border-0 rounded-4">
+
+                    <div class="card-header bg-dark text-white rounded-top-4">
+                        <h5 class="mb-0">
+                            <i class="bi bi-pencil-square me-2"></i>
+                            Datos de la Promoción
+                        </h5>
+                    </div>
+
+                    <div class="card-body p-4">
+
+                        <EditForm Model="promocion"
+                                  OnValidSubmit="GuardarCambios"
+                                  FormName="frmEditarPromocion">
+
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+
+                            <div class="mb-3">
+                                <label class="form-label">Título</label>
+                                <InputText class="form-control"
+                                           @bind-Value="promocion.Titulo" />
+                                <ValidationMessage For="@(() => promocion.Titulo)" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Descripción</label>
+                                <InputTextArea class="form-control"
+                                               rows="3"
+                                               @bind-Value="promocion.Descripcion" />
+                                <ValidationMessage For="@(() => promocion.Descripcion)" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Imagen</label>
+
+                                <InputText class="form-control mb-2"
+                                           @bind-Value="promocion.Imagen" />
+
+                                <InputFile OnChange="BuscarImagen"
+                                           accept="image/*"
+                                           class="form-control" />
+
+                                <small class="text-muted">
+                                    Puede escribir la ruta manualmente o buscar una imagen desde el equipo.
+                                </small>
+
+                                @if (!string.IsNullOrEmpty(promocion.Imagen))
+                                {
+                                    <div class="mt-3">
+                                        <img src="@promocion.Imagen"
+                                             class="img-fluid rounded shadow"
+                                             style="max-height: 180px; object-fit: cover;"
+                                             alt="@promocion.Titulo" />
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Porcentaje de descuento</label>
+                                <InputNumber class="form-control"
+                                             @bind-Value="promocion.PorcentajeDescuento" />
+                                <ValidationMessage For="@(() => promocion.PorcentajeDescuento)" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Precio promocional</label>
+                                <InputNumber class="form-control"
+                                             @bind-Value="promocion.PrecioPromocional" />
+                                <ValidationMessage For="@(() => promocion.PrecioPromocional)" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Orden</label>
+                                <InputNumber class="form-control"
+                                             @bind-Value="promocion.Orden" />
+                            </div>
+
+                            <div class="form-check mb-4">
+                                <InputCheckbox class="form-check-input"
+                                               @bind-Value="promocion.Activo" />
+                                <label class="form-check-label">
+                                    Promoción activa
+                                </label>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-check-circle-fill me-2"></i>
+                                    Guardar cambios
+                                </button>
+
+                                <button type="button"
+                                        class="btn btn-secondary w-100"
+                                        @onclick="Volver">
+                                    Volver
+                                </button>
+                            </div>
+
+                        </EditForm>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    }
+
+</div>
+
+@code {
+    [Parameter]
+    public int PromocionId { get; set; }
+
+    private Promocion? promocion;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!SesionUsuario.EstaLogueado || !SesionUsuario.EsAdministrador)
+        {
+            Navigation.NavigateTo("/login", replace: true);
+            return;
+        }
+
+        promocion = await PromocionService.ObtenerPromocionPorId(PromocionId);
+    }
+
+    private async Task GuardarCambios()
+    {
+        if (promocion != null)
+        {
+            await PromocionService.ModificarPromocion(promocion);
+
+            Navigation.NavigateTo("/admin/promociones");
+        }
+    }
+
+    private void Volver()
+    {
+        Navigation.NavigateTo("/admin/promociones");
+    }
+
+    private async Task BuscarImagen(InputFileChangeEventArgs e)
+    {
+        if (promocion == null)
+        {
+            return;
+        }
+
+        var archivo = e.File;
+
+        var carpetaUploads = Path.Combine(Env.WebRootPath, "uploads");
+
+        if (!Directory.Exists(carpetaUploads))
+        {
+            Directory.CreateDirectory(carpetaUploads);
+        }
+
+        var extension = Path.GetExtension(archivo.Name);
+        var nombreArchivo = $"{Guid.NewGuid()}{extension}";
+        var rutaFisica = Path.Combine(carpetaUploads, nombreArchivo);
+
+        await using var stream = File.Create(rutaFisica);
+
+        await archivo.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024)
+            .CopyToAsync(stream);
+
+        promocion.Imagen = $"uploads/{nombreArchivo}";
+    }
+}

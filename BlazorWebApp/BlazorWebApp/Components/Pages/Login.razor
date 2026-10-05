@@ -1,0 +1,148 @@
+﻿@page "/login"
+
+@using BlazorWebApp.Services
+
+@inject UsuarioService UsuarioService
+@inject SesionUsuarioService SesionUsuario
+@inject NavigationManager Navigation
+
+<PageTitle>Login</PageTitle>
+
+<div class="container py-5">
+
+    <div class="row justify-content-center">
+
+        <div class="col-md-6 col-lg-5">
+
+            <div class="card shadow border-0 rounded-4">
+
+                <div class="card-header bg-dark text-white text-center rounded-top-4">
+                    <h3 class="mb-0">
+                        <i class="bi bi-person-circle me-2"></i>
+                        Iniciar Sesión
+                    </h3>
+                </div>
+
+                <div class="card-body p-4">
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Correo electrónico
+                        </label>
+
+                        <input class="form-control"
+                               placeholder="Ingrese su email"
+                               value="@email"
+                               @oninput="ActualizarEmail" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Contraseña
+                        </label>
+
+                        <input type="password"
+                               class="form-control"
+                               placeholder="Ingrese su contraseña"
+                               value="@password"
+                               @oninput="ActualizarPassword" />
+                    </div>
+
+                    <button type="button"
+                            class="btn btn-primary w-100"
+                            @onclick="IniciarSesion">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>
+                        Ingresar
+                    </button>
+
+                    @if (!string.IsNullOrEmpty(mensajeError))
+                    {
+                        <div class="alert alert-danger mt-3">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            @mensajeError
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(mensajePrueba))
+                    {
+                        <div class="alert alert-info mt-3">
+                            @mensajePrueba
+                        </div>
+                    }
+
+                    <hr />
+
+                    <div class="small text-muted">
+                        <p class="mb-1">
+                            <strong>Administrador:</strong> admin@electroshop.com / admin123
+                        </p>
+
+                        <p class="mb-0">
+                            <strong>Cliente:</strong> cliente@electroshop.com / cliente123
+                        </p>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+@code {
+    private string email = string.Empty;
+    private string password = string.Empty;
+
+    private string mensajeError = string.Empty;
+    private string mensajePrueba = string.Empty;
+
+    private void ActualizarEmail(ChangeEventArgs e)
+    {
+        email = e.Value?.ToString() ?? string.Empty;
+    }
+
+    private void ActualizarPassword(ChangeEventArgs e)
+    {
+        password = e.Value?.ToString() ?? string.Empty;
+    }
+
+    private async Task IniciarSesion()
+    {
+        mensajeError = string.Empty;
+        mensajePrueba = "Se presionó el botón Ingresar.";
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            mensajeError = "Ingrese el correo electrónico.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            mensajeError = "Ingrese la contraseña.";
+            return;
+        }
+
+        var usuario = await UsuarioService.ValidarLogin(email.Trim(), password.Trim());
+
+        if (usuario == null)
+        {
+            mensajeError = "Email o contraseña incorrectos.";
+            return;
+        }
+
+        SesionUsuario.IniciarSesion(usuario);
+
+        if (usuario.Rol == "Administrador")
+        {
+            Navigation.NavigateTo("/admin");
+        }
+        else
+        {
+            Navigation.NavigateTo("/productos");
+        }
+    }
+}

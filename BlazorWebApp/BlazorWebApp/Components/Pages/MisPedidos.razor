@@ -1,0 +1,103 @@
+﻿@page "/mis-pedidos"
+@using Microsoft.AspNetCore.Components.Web
+@using BlazorWebApp.Models
+@using BlazorWebApp.Services
+@rendermode InteractiveServer
+
+@inject PedidoService PedidoService
+@inject SesionUsuarioService SesionUsuario
+@inject NavigationManager Navigation
+
+<div class="container mt-4">
+    <h2 class="mb-4">Mis Pedidos</h2>
+
+    @if (cargando)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando historial...</span>
+            </div>
+        </div>
+    }
+    else if (pedidos == null || !pedidos.Any())
+    {
+        <div class="alert alert-info">
+            No has realizado ningún pedido todavía. <a href="/" class="alert-link">¡Ve a la tienda a comprar algo!</a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover table-striped align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Nº Pedido</th>
+                        <th>Fecha</th>
+                        <th>Estado</th>
+                        <th>Total</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var pedido in pedidos)
+                    {
+                        <tr>
+                            <td><strong>#@pedido.Id</strong></td>
+                            <td>@pedido.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>
+                                @if (pedido.Estado == "Pendiente")
+                                {
+                                    <span class="badge bg-warning text-dark">@pedido.Estado</span>
+                                }
+                                else if (pedido.Estado == "Pagado")
+                                {
+                                    <span class="badge bg-success">@pedido.Estado</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">@pedido.Estado</span>
+                                }
+                            </td>
+                            <td>$@pedido.Total</td>
+                            <td>
+                                <a href="/pedido-exitoso/@pedido.Id" class="btn btn-sm btn-outline-primary">Ver Detalle</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private List<Pedido>? pedidos;
+    private bool cargando = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // 1. Verificamos que el usuario esté logueado
+        var usuario = SesionUsuario.UsuarioActual;
+        if (usuario == null)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        try
+        {
+            // 2. Buscamos los pedidos usando el ID del usuario actual
+            pedidos = await PedidoService.ObtenerPedidosPorClienteAsync(usuario.UsuarioId);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar pedidos: {ex.Message}");
+            pedidos = new List<Pedido>();
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+}
+<p>Usuario actual cargado: @SesionUsuario.UsuarioActual?.NombreApellido (ID: @SesionUsuario.UsuarioActual?.UsuarioId)</p>

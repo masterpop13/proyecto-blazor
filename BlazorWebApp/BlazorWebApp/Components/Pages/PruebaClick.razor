@@ -1,0 +1,23 @@
+﻿@page "/pruebaclick"
+
+<h3>Prueba de botón</h3>
+
+<button class="btn btn-primary" @onclick="ProbarClick">
+    Probar click
+</button>
+
+@if (!string.IsNullOrEmpty(mensaje))
+{
+    <div class="alert alert-success mt-3">
+        @mensaje
+    </div>
+}
+
+@code {
+    private string mensaje = string.Empty;
+
+    private void ProbarClick()
+    {
+        mensaje = "El click funciona correctamente.";
+    }
+}

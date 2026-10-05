@@ -1,0 +1,46 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34212.112
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorWebApp", "BlazorWebApp\BlazorWebApp\BlazorWebApp.csproj", "{3381FD33-0C00-40D2-A8D3-5BA33CA1DEDE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorWebApp.Client", "BlazorWebApp\BlazorWebApp.Client\BlazorWebApp.Client.csproj", "{BEA668CF-BB74-4137-B46F-DE62BDE84CA6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Readme", "Readme", "{D107F4C8-89CC-BEA8-D3D7-CA6B7733353D}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{8F5DB038-0181-4404-BD23-0A616A8677ED}"
+	ProjectSection(SolutionItems) = preProject
+		dotnet.yml = dotnet.yml
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3381FD33-0C00-40D2-A8D3-5BA33CA1DEDE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3381FD33-0C00-40D2-A8D3-5BA33CA1DEDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3381FD33-0C00-40D2-A8D3-5BA33CA1DEDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3381FD33-0C00-40D2-A8D3-5BA33CA1DEDE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BEA668CF-BB74-4137-B46F-DE62BDE84CA6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BEA668CF-BB74-4137-B46F-DE62BDE84CA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BEA668CF-BB74-4137-B46F-DE62BDE84CA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BEA668CF-BB74-4137-B46F-DE62BDE84CA6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{8F5DB038-0181-4404-BD23-0A616A8677ED} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4572341D-1863-4000-AA6D-35453330485F}
+	EndGlobalSection
+EndGlobal

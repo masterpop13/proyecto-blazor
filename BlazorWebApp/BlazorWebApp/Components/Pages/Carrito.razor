@@ -1,0 +1,175 @@
+﻿@page "/carrito"
+@rendermode InteractiveServer
+@implements IDisposable
+
+@using BlazorWebApp.Models
+@using BlazorWebApp.Services
+
+@inject CarritoStateService CarritoState
+@inject SesionUsuarioService SesionUsuario
+@inject NavigationManager Navigation
+
+<PageTitle>Carrito</PageTitle>
+
+<div class="container py-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-bold text-uppercase mb-1">
+                Carrito de Compras
+            </h1>
+
+            <p class="text-muted mb-0">
+                Productos seleccionados por el cliente.
+            </p>
+        </div>
+
+        <button class="btn btn-primary"
+                @onclick="VolverAProductos">
+            <i class="bi bi-box-seam-fill me-2"></i>
+            Ver productos
+        </button>
+    </div>
+
+    @if (!string.IsNullOrEmpty(mensajeCompra))
+    {
+        <div class="alert alert-success">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            @mensajeCompra
+        </div>
+    }
+
+    @if (!CarritoState.Productos.Any())
+    {
+        <div class="alert alert-warning">
+            <i class="bi bi-cart-x-fill me-2"></i>
+            El carrito está vacío.
+        </div>
+    }
+    else
+    {
+        <div class="card shadow border-0 rounded-4">
+
+            <div class="card-header bg-dark text-white rounded-top-4">
+                <h5 class="mb-0">
+                    <i class="bi bi-cart-fill me-2"></i>
+                    Productos en el carrito
+                </h5>
+            </div>
+
+            <div class="card-body">
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+
+                        <thead class="table-light">
+                            <tr>
+                                <th>Producto</th>
+                                <th>Precio</th>
+                                <th class="text-center">Acción</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var producto in CarritoState.Productos)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@producto.Nombre</strong>
+                                    </td>
+
+                                    <td>
+                                        <span class="text-success fw-bold">
+                                            $@producto.Precio
+                                        </span>
+                                    </td>
+
+                                    <td class="text-center">
+                                        <button class="btn btn-danger btn-sm"
+                                                @onclick="() => QuitarProducto(producto)">
+                                            <i class="bi bi-trash-fill"></i>
+                                            Quitar
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-4">
+
+                    <h4>
+                        Total:
+                        <span class="text-success">
+                            $@CarritoState.Total
+                        </span>
+                    </h4>
+
+                    <div>
+                        <button class="btn btn-success me-2"
+                                @onclick="FinalizarCompra">
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                            Finalizar compra
+                        </button>
+
+                        <button class="btn btn-outline-danger"
+                                @onclick="VaciarCarrito">
+                            <i class="bi bi-trash-fill me-2"></i>
+                            Vaciar carrito
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    }
+
+</div>
+
+@code {
+    private string mensajeCompra = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        if (!SesionUsuario.EstaLogueado)
+        {
+            Navigation.NavigateTo("/login", replace: true);
+            return;
+        }
+
+        CarritoState.OnChange += StateHasChanged;
+    }
+
+    private void QuitarProducto(Producto producto)
+    {
+        CarritoState.EliminarProducto(producto);
+        mensajeCompra = string.Empty;
+    }
+
+    private void VaciarCarrito()
+    {
+        CarritoState.VaciarCarrito();
+        mensajeCompra = string.Empty;
+    }
+
+    private void FinalizarCompra()
+    {
+        mensajeCompra = "Compra realizada correctamente. Esta operación es visual por el momento.";
+
+        CarritoState.VaciarCarrito();
+    }
+
+    private void VolverAProductos()
+    {
+        Navigation.NavigateTo("/productos");
+    }
+
+    public void Dispose()
+    {
+        CarritoState.OnChange -= StateHasChanged;
+    }
+}

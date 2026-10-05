@@ -1,0 +1,114 @@
+﻿@page "/admin/pedidos"
+@using Microsoft.AspNetCore.Components.Web
+@using BlazorWebApp.Models
+@using BlazorWebApp.Services
+@rendermode InteractiveServer
+
+@inject PedidoService PedidoService
+@inject SesionUsuarioService SesionUsuario
+@inject NavigationManager Navigation
+
+<div class="container mt-4">
+    <h2 class="mb-4">Gestión de Pedidos (Administrador)</h2>
+
+    @if (accesoDenegado)
+    {
+        <div class="alert alert-danger">No tienes permisos para acceder a esta sección.</div>
+    }
+    else if (cargando)
+    {
+        <div class="spinner-border text-primary" role="status"></div>
+    }
+    else if (pedidos == null || !pedidos.Any())
+    {
+        <div class="alert alert-info">No hay pedidos registrados en el sistema.</div>
+    }
+    else
+    {
+        <table class="table table-striped table-hover align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Cliente ID</th>
+                    <th>Fecha</th>
+                    <th>Total</th>
+                    <th>Estado Actual</th>
+                    <th>Cambiar Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var pedido in pedidos)
+                {
+                    <tr>
+                        <td><strong>#@pedido.Id</strong></td>
+                        <td>@pedido.ClienteId</td>
+                        <td>@pedido.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>$@pedido.Total</td>
+                        <td>
+                            <span class="badge @ObtenerClaseEstado(pedido.Estado)">@pedido.Estado</span>
+                        </td>
+                        <td>
+                            <div class="input-group input-group-sm">
+                                <select class="form-select" @bind="pedido.Estado">
+                                    <option value="Pendiente">Pendiente</option>
+                                    <option value="Pagado">Pagado</option>
+                                    <option value="Enviado">Enviado</option>
+                                    <option value="Entregado">Entregado</option>
+                                    <option value="Cancelado">Cancelado</option>
+                                </select>
+                                <button class="btn btn-primary" @onclick="() => GuardarEstado(pedido)">
+                                    Guardar
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    private List<Pedido>? pedidos;
+    private bool cargando = true;
+    private bool accesoDenegado = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var usuario = SesionUsuario.UsuarioActual;
+
+        // Verificamos que esté logueado y sea Administrador
+        // (Ajusta "Admin" o "Administrador" según cómo lo tengas en tu base de datos)
+        if (usuario == null || (usuario.Rol != "Admin" && usuario.Rol != "Administrador"))
+        {
+            accesoDenegado = true;
+            cargando = false;
+            return;
+        }
+
+        await CargarPedidos();
+    }
+
+    private async Task CargarPedidos()
+    {
+        cargando = true;
+        pedidos = await PedidoService.ObtenerTodosLosPedidosAsync();
+        cargando = false;
+    }
+
+    private async Task GuardarEstado(Pedido pedido)
+    {
+        await PedidoService.ActualizarEstadoPedidoAsync(pedido.Id, pedido.Estado);
+        // Opcional: mostrar un mensaje temporal de "Guardado con éxito"
+    }
+
+    private string ObtenerClaseEstado(string estado) => estado switch
+    {
+        "Pendiente" => "bg-warning text-dark",
+        "Pagado" => "bg-success",
+        "Enviado" => "bg-info text-dark",
+        "Entregado" => "bg-primary",
+        "Cancelado" => "bg-danger",
+        _ => "bg-secondary"
+    };
+}

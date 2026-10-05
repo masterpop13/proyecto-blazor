@@ -1,0 +1,33 @@
+﻿<header class="masthead">
+    <div class="container">
+        <div class="masthead-subheading">
+            @Subtitulo
+        </div>
+
+        <div class="masthead-heading text-uppercase">
+            @Titulo
+        </div>
+
+        @if (!string.IsNullOrEmpty(TextoBoton))
+        {
+            <a class="btn btn-primary btn-xl text-uppercase"
+               href="@LinkBoton">
+                @TextoBoton
+            </a>
+        }
+    </div>
+</header>
+
+@code {
+    [Parameter]
+    public string Titulo { get; set; } = "Tecnología al mejor precio";
+
+    [Parameter]
+    public string Subtitulo { get; set; } = "Bienvenido a ElectroShop";
+
+    [Parameter]
+    public string TextoBoton { get; set; } = "Ver productos";
+
+    [Parameter]
+    public string LinkBoton { get; set; } = "#productos";
+}

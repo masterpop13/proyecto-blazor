@@ -1,0 +1,147 @@
+﻿@using BlazorWebApp.Services
+@inject SesionUsuarioService SesionUsuario
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<!--
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container justify-content-center">
+        <a class="navbar-brand" href="">Venta de Productos Electronicos</a>
+    </div>
+</div>
+-->
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+
+    <nav data-enhance-nav="false">
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> INICIO
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="productos">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> PRODUCTOS
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="Promociones">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> PROMOCIONES
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="QuienesSomos">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> QUIÉNES SOMOS
+            </NavLink>
+        </div>
+
+        <li class="nav-item">
+            <NavLink class="nav-link" href="mis-pedidos">
+                <span class="bi bi-box-seam" aria-hidden="true"></span> Mis Pedidos
+            </NavLink>
+        </li>
+
+        @if (SesionUsuario.UsuarioActual?.Rol == "Admin" || SesionUsuario.UsuarioActual?.Rol == "Administrador")
+        {
+            <li class="nav-item">
+                <NavLink class="nav-link" href="admin/pedidos">
+                    <span class="bi bi-clipboard-data" aria-hidden="true"></span> Gestión Pedidos
+                </NavLink>
+            </li>
+        }
+
+        @if (!SesionUsuario.EstaLogueado)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="registro">
+                    <span class="bi bi-person-plus-fill" aria-hidden="true"></span> REGISTRO
+                </NavLink>
+            </div>
+
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="login">
+                    <span class="bi bi-person-circle" aria-hidden="true"></span> LOGIN
+                </NavLink>
+            </div>
+        }
+
+        @if (SesionUsuario.EstaLogueado)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="carrito">
+                    <span class="bi bi-cart-fill" aria-hidden="true"></span> CARRITO
+                </NavLink>
+            </div>
+        }
+
+        @if (SesionUsuario.EsAdministrador)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="admin">
+                    <span class="bi bi-gear-fill" aria-hidden="true"></span> ADMIN
+                </NavLink>
+            </div>
+
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="admin/productos">
+                    <span class="bi bi-box-seam-fill" aria-hidden="true"></span> ADMIN PRODUCTOS
+                </NavLink>
+            </div>
+
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="admin/clientes">
+                    <span class="bi bi-people-fill" aria-hidden="true"></span> CLIENTES
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="admin/promociones">
+                    <span class="bi bi-tags-fill" aria-hidden="true"></span> ADMIN PROMOCIONES
+                </NavLink>
+            </div>
+        }
+
+        @if (SesionUsuario.EstaLogueado)
+        {
+            <div class="nav-item px-3">
+                <span class="nav-link text-white">
+                    <span class="bi bi-person-check-fill" aria-hidden="true"></span>
+                    Bienvenido, @SesionUsuario.UsuarioActual?.NombreApellido
+                </span>
+            </div>
+
+            <div class="nav-item px-3">
+                <button class="nav-link btn btn-link text-white text-start"
+                        @onclick="CerrarSesion">
+                    <span class="bi bi-box-arrow-right" aria-hidden="true"></span>
+                    CERRAR SESIÓN
+                </button>
+            </div>
+        }
+
+    </nav>
+
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        SesionUsuario.OnChange += StateHasChanged;
+    }
+
+    private void CerrarSesion()
+    {
+        SesionUsuario.CerrarSesion();
+        Navigation.NavigateTo("/login");
+    }
+
+    public void Dispose()
+    {
+        SesionUsuario.OnChange -= StateHasChanged;
+    }
+}

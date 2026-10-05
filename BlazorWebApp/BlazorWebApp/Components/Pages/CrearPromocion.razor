@@ -1,0 +1,151 @@
+﻿@page "/admin/promociones/crear"
+@rendermode InteractiveServer
+
+@using BlazorWebApp.Models
+@using BlazorWebApp.Services
+
+@inject PromocionService PromocionService
+@inject SesionUsuarioService SesionUsuario
+@inject NavigationManager Navigation
+
+<PageTitle>Nueva Promoción</PageTitle>
+
+<div class="container py-5">
+
+    <div class="text-center mb-5">
+        <h1 class="fw-bold text-uppercase">
+            Nueva Promoción
+        </h1>
+
+        <p class="text-muted">
+            Cargá una promoción para mostrarla en el inicio y en la página de promociones.
+        </p>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+
+            <div class="card shadow border-0 rounded-4">
+
+                <div class="card-header bg-dark text-white rounded-top-4">
+                    <h5 class="mb-0">
+                        <i class="bi bi-tags-fill me-2"></i>
+                        Datos de la Promoción
+                    </h5>
+                </div>
+
+                <div class="card-body p-4">
+
+                    <EditForm Model="promocion"
+                              OnValidSubmit="GuardarPromocion"
+                              FormName="frmCrearPromocion">
+
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="mb-3">
+                            <label class="form-label">Título</label>
+                            <InputText class="form-control"
+                                       placeholder="Ejemplo: Notebook Lenovo"
+                                       @bind-Value="promocion.Titulo" />
+                            <ValidationMessage For="@(() => promocion.Titulo)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Descripción</label>
+                            <InputTextArea class="form-control"
+                                           rows="3"
+                                           placeholder="Descripción de la promoción"
+                                           @bind-Value="promocion.Descripcion" />
+                            <ValidationMessage For="@(() => promocion.Descripcion)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Imagen</label>
+                            <InputText class="form-control"
+                                       placeholder="assets/img/portfolio/1.jpg"
+                                       @bind-Value="promocion.Imagen" />
+                            <ValidationMessage For="@(() => promocion.Imagen)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Porcentaje de descuento</label>
+                            <InputNumber class="form-control"
+                                         @bind-Value="promocion.PorcentajeDescuento" />
+                            <ValidationMessage For="@(() => promocion.PorcentajeDescuento)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Precio promocional</label>
+                            <InputNumber class="form-control"
+                                         @bind-Value="promocion.PrecioPromocional" />
+                            <ValidationMessage For="@(() => promocion.PrecioPromocional)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Orden</label>
+                            <InputNumber class="form-control"
+                                         @bind-Value="promocion.Orden" />
+                        </div>
+
+                        <div class="form-check mb-4">
+                            <InputCheckbox class="form-check-input"
+                                           @bind-Value="promocion.Activo" />
+                            <label class="form-check-label">
+                                Promoción activa
+                            </label>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                                Guardar Promoción
+                            </button>
+
+                            <button type="button"
+                                    class="btn btn-secondary w-100"
+                                    @onclick="Volver">
+                                Volver
+                            </button>
+                        </div>
+
+                    </EditForm>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+@code {
+    private Promocion promocion = new Promocion
+    {
+        Imagen = "assets/img/portfolio/1.jpg",
+        Activo = true,
+        Orden = 1
+    };
+
+    protected override void OnInitialized()
+    {
+        if (!SesionUsuario.EstaLogueado || !SesionUsuario.EsAdministrador)
+        {
+            Navigation.NavigateTo("/login", replace: true);
+            return;
+        }
+    }
+
+    private async Task GuardarPromocion()
+    {
+        await PromocionService.AgregarPromocion(promocion);
+
+        Navigation.NavigateTo("/admin/promociones");
+    }
+
+    private void Volver()
+    {
+        Navigation.NavigateTo("/admin/promociones");
+    }
+}
