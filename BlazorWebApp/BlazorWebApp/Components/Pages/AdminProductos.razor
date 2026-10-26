@@ -1,1 +1,191 @@
-﻿
+﻿@page "/admin/productos"
+@rendermode InteractiveServer
+
+@using BlazorWebApp.Models
+@using BlazorWebApp.Services
+@inject ProductoService ProductoService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<PageTitle>Gestión de Productos</PageTitle>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-uppercase">Catálogo de Productos</h2>
+        <a href="/admin/productos/nuevo" class="btn btn-success">
+            <i class="bi bi-plus-circle me-1"></i> Nuevo Producto
+        </a>
+    </div>
+
+    <!-- Barra de Búsqueda -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="Buscar por nombre..."
+                       @bind="terminoBusqueda" @bind:event="oninput" @onkeyup="Buscar" />
+                <button class="btn btn-primary" @onclick="Buscar">
+                    <i class="bi bi-search"></i> Buscar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @if (productosPaginados == null)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2">Cargando productos...</p>
+        </div>
+    }
+    else if (!productosPaginados.Any())
+    {
+        <div class="alert alert-info">No se encontraron productos.</div>
+    }
+    else
+    {
+        <div class="table-responsive shadow-sm rounded">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Imagen</th>
+                        <th>Nombre</th>
+                        <th>Categoría</th>
+                        <th>Precio</th>
+                        <th>Stock</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var prod in productosPaginados)
+                    {
+                        <tr>
+                            <td>
+                                @if (!string.IsNullOrEmpty(prod.Imagen))
+                                {
+                                    <img src="@prod.Imagen" alt="@prod.Nombre" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;" />
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">Sin img</span>
+                                }
+                            </td>
+                            <td class="fw-bold">@prod.Nombre</td>
+                            <td>@(prod.Categoria?.Nombre ?? "Sin categoría")</td>
+                            <td>$@prod.Precio</td>
+                            <td>
+                                @if (prod.Stock <= 5)
+                                {
+                                    <span class="badge bg-danger">@prod.Stock</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">@prod.Stock</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                <a href="/admin/productos/editar/@prod.ProductoId" class="btn btn-sm btn-outline-primary me-2">
+                                    <i class="bi bi-pencil"></i> Editar
+                                </a>
+                                <!-- Botón Eliminar con JS Interop -->
+                                <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmarEliminacion(prod)">
+                                    <i class="bi bi-trash"></i> Borrar
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Controles de Paginación -->
+        <nav class="mt-4 d-flex justify-content-center">
+            <ul class="pagination">
+                <li class="page-item @(paginaActual == 1 ? "disabled" : "")">
+                    <button class="page-link" @onclick="() => CambiarPagina(paginaActual - 1)">Anterior</button>
+                </li>
+
+                @for (int i = 1; i <= totalPaginas; i++)
+                {
+                    int pageNumber = i;
+                    <li class="page-item @(paginaActual == pageNumber ? "active" : "")">
+                        <button class="page-link" @onclick="() => CambiarPagina(pageNumber)">@pageNumber</button>
+                    </li>
+                }
+
+                <li class="page-item @(paginaActual == totalPaginas ? "disabled" : "")">
+                    <button class="page-link" @onclick="() => CambiarPagina(paginaActual + 1)">Siguiente</button>
+                </li>
+            </ul>
+        </nav>
+    }
+</div>
+
+@code {
+    private List<Producto>? todosLosProductos;
+    private List<Producto>? productosPaginados;
+
+    // Variables para Búsqueda y Paginación
+    private string terminoBusqueda = string.Empty;
+    private int paginaActual = 1;
+    private int itemsPorPagina = 5; // Muestra 5 productos por página
+    private int totalPaginas = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        todosLosProductos = await ProductoService.ObtenerProductos();
+        ProcesarVista();
+    }
+
+    private void Buscar()
+    {
+        paginaActual = 1; // Al buscar, volvemos a la primera página
+        ProcesarVista();
+    }
+
+    private void ProcesarVista()
+    {
+        if (todosLosProductos == null) return;
+
+        // Búsqueda en memoria
+        var query = todosLosProductos.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(terminoBusqueda))
+        {
+            query = query.Where(p => p.Nombre.Contains(terminoBusqueda, StringComparison.OrdinalIgnoreCase));
+        }
+
+        // Paginación
+        int totalItems = query.Count();
+        totalPaginas = (int)Math.Ceiling(totalItems / (double)itemsPorPagina);
+        if (totalPaginas == 0) totalPaginas = 1;
+
+        productosPaginados = query
+            .Skip((paginaActual - 1) * itemsPorPagina)
+            .Take(itemsPorPagina)
+            .ToList();
+    }
+
+    private void CambiarPagina(int nuevaPagina)
+    {
+        if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas)
+        {
+            paginaActual = nuevaPagina;
+            ProcesarVista();
+        }
+    }
+
+    private async Task ConfirmarEliminacion(Producto prod)
+    {
+        bool confirmado = await JS.InvokeAsync<bool>("confirm", $"¿Estás seguro de que deseas eliminar el producto '{prod.Nombre}'?");
+
+        if (confirmado)
+        {
+            await ProductoService.EliminarProducto(prod.ProductoId);
+            await CargarDatos();
+        }
+    }
+}
