@@ -19,7 +19,7 @@ jobs:
         dotnet-version: '8.0.x'
         
     - name: Restore dependencies
-      run: dotnet restore BlazorWebApp/BlazorWebApp.csproj
+      run: dotnet restore
       
     - name: Build
-      run: dotnet build BlazorWebApp/BlazorWebApp.csproj --no-restore -c Release
+      run: dotnet build --no-restore -c Release
